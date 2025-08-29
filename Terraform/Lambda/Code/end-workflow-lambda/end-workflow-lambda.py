@@ -59,7 +59,7 @@ def lambda_handler(event, context):
                     ":st": "DONE",
                 },
                 ExpressionAttributeNames={
-                    "#st": "status"  
+                    "#st": "workflow_status"  
                 },
             )
             updated_count += 1
