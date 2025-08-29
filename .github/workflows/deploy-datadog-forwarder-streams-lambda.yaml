@@ -1,0 +1,82 @@
+name: Build and Deploy datadog_forwarder_streams_lambda Docker Image
+
+on:
+  push:
+    branches: main
+    paths:
+      - 'Terraform/Lambda/datadog_forwarder_streams_lambda/**'
+      - 'Terraform/Lambda/Code/datadog_forwarder_streams_lambda/**'
+
+  # Permet de déclencher manuellement
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+
+env:
+  AWS_REGION: eu-west-3
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        environment: 
+          - ${{ github.event.inputs.environment || 'dev' }} 
+    
+    environment: ${{ matrix.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Set environment variables
+      run: |
+        echo "ECR_REPOSITORY=datadog_forwarder_streams_lambda_ecr_repo_${{ matrix.environment }}" >> $GITHUB_ENV
+        echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
+    - name: Build Docker image (debug)
+      run: |
+        echo " Building Docker image..."
+        docker buildx build \
+          -f ./Terraform/Lambda/Code/datadog_forwarder_streams_lambda/Dockerfile \
+          --platform linux/arm64 \
+          --provenance=false \
+          --sbom=false \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          --load ./Terraform/Lambda/Code/datadog_forwarder_streams_lambda
+
+    - name: Push image to ECR
+      run: |
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Output image URI
+      run: |
+        echo "✅ Image pushed successfully!"
+        echo "Image URI: $ECR_REGISTRY/$ECR_REPOSITORY:latest"
+        echo "Tagged with: $IMAGE_TAG"

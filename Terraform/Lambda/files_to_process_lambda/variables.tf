@@ -23,3 +23,4 @@ variable "files_to_process_lambda_ecr_repo_url" {
   description = "URL of the ECR repo of the end_workflow_lambda"
   type        = string
 }
+

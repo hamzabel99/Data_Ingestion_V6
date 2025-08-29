@@ -32,3 +32,11 @@ resource "aws_ecr_repository" "start_workflow_lambda_ecr_repo" {
     scan_on_push = true
   }
 }
+
+resource "aws_ecr_repository" "datadog_forwarder_streams_ecr_repo" {
+  name = "datadog_forwarder_streams_lambda_ecr_repo_${var.env}"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}

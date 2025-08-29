@@ -37,6 +37,19 @@ data "aws_iam_policy_document" "files_to_process_lambda_policy" {
     ]
   }
 
+  statement {
+      
+        sid    = "DynamoDBStreamAccess"
+        effect = "Allow"
+        actions = [
+          "dynamodb:GetRecords",
+          "dynamodb:GetShardIterator",
+          "dynamodb:DescribeStream",
+          "dynamodb:ListStreams"
+        ]
+        resources = ["arn:aws:dynamodb:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:table/workflow_statut-dev/stream/*"]
+      
+  }
 
   statement {
     sid    = "DynamoReadWorkflowMetadata"
