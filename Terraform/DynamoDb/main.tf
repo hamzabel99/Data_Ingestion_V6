@@ -18,4 +18,6 @@ resource "aws_dynamodb_table" "workflow_statut_table" {
     name = "s3_prefix"
     type = "S"
   }
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 }
