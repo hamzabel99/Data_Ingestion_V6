@@ -37,7 +37,7 @@ module "start-workflow-lambda" {
   workflow_metadata_table_name       = module.Dynamodb.workflow_metadata_table_name
   workflow_statut_table_name         = module.Dynamodb.workflow_statut_table_name
   csv_to_parquet_sfn_name            = module.stepfunctions.csv_to_parquet_sfn_name
-  start_workflow_lambda_ecr_repo_url = module.ecr.start_workflow_lambda_ecr_repo
+  start_workflow_lambda_ecr_repo_url = module.ecr.start_workflow_lambda_ecr_repo_url
 
 }
 
@@ -55,7 +55,7 @@ module "files_to_process_lambda" {
   env                                  = var.env
   aws_sqs_queue_name                   = module.Sqs.preprocess_queue_name
   workflow_statut_table_name           = module.Dynamodb.workflow_statut_table_name
-  files_to_process_lambda_ecr_repo_url = module.ecr.files_to_process_lambda_ecr_repo
+  files_to_process_lambda_ecr_repo_url = module.ecr.files_to_process_lambda_ecr_repo_url
 }
 
 module "glue-job" {
@@ -92,6 +92,14 @@ module "daily_monitor_lambda" {
   env                               = var.env
   workflow_statut_table_name        = module.Dynamodb.workflow_statut_table_name
   daily_monitor_lambda_ecr_repo_url = module.ecr.daily_monitor_lambda_ecr_repo_url
+
+}
+
+module "datadog_forwarder_streams_lambda"{
+  source = "../../Lambda/datadog_forwarder_streams"
+  datadog_forwarder_streams_ecr_repo_url = module.ecr.datadog_forwarder_streams_ecr_repo_url
+  env = var.env
+  workflow_statut_table_stream_arn = module.Dynamodb.workflow_statut_table_stream_arn
 
 }
 

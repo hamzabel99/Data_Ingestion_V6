@@ -6,10 +6,14 @@ output "end_workflow_lambda_ecr_repo_url" {
   value = aws_ecr_repository.end_workflow_lambda_ecr_repo.repository_url
 }
 
-output "files_to_process_lambda_ecr_repo" {
+output "files_to_process_lambda_ecr_repo_url" {
   value = aws_ecr_repository.files_to_process_lambda_ecr_repo.repository_url
 }
 
-output "start_workflow_lambda_ecr_repo" {
+output "start_workflow_lambda_ecr_repo_url" {
   value = aws_ecr_repository.start_workflow_lambda_ecr_repo.repository_url
+}
+
+output "datadog_forwarder_streams_ecr_repo_url" {
+  value = aws_ecr_repository.datadog_forwarder_streams_ecr_repo.repository_url
 }
