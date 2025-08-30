@@ -24,30 +24,19 @@ resource "aws_iam_role" "datadog_forwarder_streams_role" {
 
 data "aws_iam_policy_document" "datadog_forwarder_streams_policy" {
 
-
-
   statement {
-    sid    = "DynamoReadWorkflowMetadata"
+    sid    = "DynamoDBStreamAccess"
     effect = "Allow"
     actions = [
-      "dynamodb:GetItem",
-      "dynamodb:BatchGetItem",
-      "dynamodb:Query",
-      "dynamodb:Scan",
-      "dynamodb:PutItem",
-      "dynamodb:UpdateItem",
-      "dynamodb:DeleteItem",
-      "dynamodb:BatchWriteItem",
-      "dynamodb:GetRecords",
-      "dynamodb:GetShardIterator",
-      "dynamodb:DescribeStream",
-      "dynamodb:ListStreams"
+    "dynamodb:GetRecords",
+    "dynamodb:GetShardIterator",
+    "dynamodb:DescribeStream",
+    "dynamodb:ListStreams"
     ]
     resources = [
-      "arn:aws:dynamodb:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:table/${var.workflow_statut_table_name}"
+      "arn:aws:dynamodb:eu-west-3:195044943814:table/workflow_statut-dev/stream/*"
     ]
   }
-
   statement {
     sid    = "CloudWatchLogs"
     effect = "Allow"
@@ -60,6 +49,19 @@ data "aws_iam_policy_document" "datadog_forwarder_streams_policy" {
       "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*"
     ]
   }
+  
+  statement {
+    sid    = "SSMParameterStoreAccess"
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:GetParametersByPath"
+    ]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter/datadog/*"
+    ]
+  }
 }
 
 
@@ -67,13 +69,6 @@ resource "aws_iam_role_policy" "datadog_forwarder_streams_permissions" {
   name   = "lambda_permissions-${var.env}"
   role   = aws_iam_role.datadog_forwarder_streams_role.id
   policy = data.aws_iam_policy_document.datadog_forwarder_streams_policy.json
-}
-
-
-data "archive_file" "data_datadog_forwarder_streams" {
-  type        = "zip"
-  source_file = "${path.module}/../Code/datadog_forwarder_streams/datadog_forwarder_streams.py"
-  output_path = "${path.module}/../Code/datadog_forwarder_streams/datadog_forwarder_streams.zip"
 }
 
 
@@ -87,4 +82,11 @@ resource "aws_lambda_function" "datadog_forwarder_streams" {
 
   memory_size = 512
   timeout     = 30
+}
+
+resource "aws_lambda_event_source_mapping" "dynamodb_trigger_datadog_forwarder" {
+  event_source_arn  = var.workflow_statut_table_stream_arn
+  function_name     = aws_lambda_function.datadog_forwarder_streams.arn
+  starting_position = "LATEST"
+  enabled           = true
 }

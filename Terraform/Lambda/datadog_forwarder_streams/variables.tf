@@ -3,17 +3,11 @@ variable "datadog_forwarder_streams_ecr_repo_url" {
   
 }
 
-variable "workflow_statut_table_name" {
-  description = "Name of the Dynamo DB workflow-statut"
-  type        = string
-
-}
-
 variable "env" {
 }
 
-variable "workflow_statut_table_name" {
-  description = "Name of the Dynamo DB workflow-statut"
+variable "workflow_statut_table_stream_arn" {
+  description = "ARN of the Dynamo DB workflow-statut"
   type        = string
 
 }
